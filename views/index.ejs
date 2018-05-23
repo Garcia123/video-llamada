@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <title>introduccion a webRTC</title>
+</head>
+
+<body>
+   <video autoplay></video>
+
+   <script>
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+      var contraints = { audio: true, video: true }
+      var videoArea = document.querySelector("video");
+
+      navigator.getUserMedia(contraints, onSuccess, onError);
+
+      function onSuccess(stream) {
+         videoArea.src = window.URL.createObjectURL(stream);
+         videoArea.play();
+      }
+
+      function onError(error) {
+         console.error(error);
+      }
+
+
+   </script>
+
+</body>
+
+</html>
