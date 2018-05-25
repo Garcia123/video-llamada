@@ -4,18 +4,67 @@
 <head>
    <meta charset="UTF-8">
    <title>introduccion a webRTC</title>
+   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 
 <body>
-   <video autoplay></video>
+
+   <div>
+      Video :
+      <select id="camera"></select>
+   </div>
+   <br/>
+   <button id="takeProfilePicture" type="button" autofocus="true">
+       crear una imagen de perfil
+   </button>
+   <p/>
+   <video autoplay class="grayscale_filter"></video>
 
    <script>
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
-      var contraints = { audio: true, video: true }
       var videoArea = document.querySelector("video");
+      var videoSelect = document.querySelector("#camera");
+      // metodo antiguo de listar las camaras.
+      //MediaStreamTrack.getSources(getCameras);
 
-      navigator.getUserMedia(contraints, onSuccess, onError);
+      navigator.mediaDevices.enumerateDevices().then(getCameras);
+
+      videoSelect.onchage = startStream;
+
+      startStream();
+
+      function getCameras(sourceInfos) {
+         for (var i = 0; i !== sourceInfos.length; ++i) {
+            var sourceInfo = sourceInfos[i];
+            var opcion = document.createElement('option');
+            opcion.value = sourceInfo.id;
+            if (sourceInfo.kind === 'videoinput') {
+               opcion.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
+               videoSelect.appendChild(opcion);
+            }
+         }
+      }
+
+      function startStream() {
+         navigator.getUserMedia = navigator.getUserMedia ||
+            navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+         var videoSource = videoSelect.value;
+         var contraints = {
+            audio: true,
+            video: {
+               mandatory: {
+                  maxWidth: 640,
+                  minWidth: 640,
+                  maxHeight: 480,
+                  minHeight: 360
+               },
+               optional: [{
+                  sourceId: videoSource
+               }]
+            }
+         };
+         navigator.getUserMedia(contraints, onSuccess, onError);
+      }
 
       function onSuccess(stream) {
          videoArea.src = window.URL.createObjectURL(stream);
