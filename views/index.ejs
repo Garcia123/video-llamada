@@ -50,18 +50,8 @@
             navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
          var videoSource = videoSelect.value;
          var contraints = {
-            audio: true,
-            video: {
-               mandatory: {
-                  maxWidth: 640,
-                  minWidth: 640,
-                  maxHeight: 480,
-                  minHeight: 360
-               },
-               optional: [{
-                  sourceId: videoSource
-               }]
-            }
+            audio: false,
+            video: false
          };
          navigator.getUserMedia(contraints, onSuccess, onError);
       }
