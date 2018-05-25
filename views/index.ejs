@@ -14,10 +14,7 @@
       <select id="camera"></select>
    </div>
    <br/>
-   <button id="takeProfilePicture" type="button" autofocus="true">
-       crear una imagen de perfil
-   </button>
-   <p/>
+   
    <video autoplay class="grayscale_filter"></video>
 
    <script>
@@ -50,8 +47,8 @@
             navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
          var videoSource = videoSelect.value;
          var contraints = {
-            audio: false,
-            video: false
+            audio: true,
+            video: true
          };
          navigator.getUserMedia(contraints, onSuccess, onError);
       }
