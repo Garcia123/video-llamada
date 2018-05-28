@@ -2,7 +2,7 @@ var express = require("express.io");
 var app = express();
 app.http().io();
 var PORT = 3000;
-console.log("server started");
+console.log("server started on port " + PORT);
 app.use(express.static(__dirname + "/public"));
 
 app.get("/", (req, res) => {
@@ -10,7 +10,10 @@ app.get("/", (req, res) => {
 });
 
 app.io.route("ready", (req) => {
-
+    req.io.join(req.data);
+    app.io.room(req.data).broadcast("announce",{
+        message : "new client in the " + req.data + "room."
+    })
 })
 
 app.listen(PORT);
