@@ -17,11 +17,25 @@
    <br/>
    
    <video autoplay class="grayscale_filter"></video>
+   <div>
+       <label>Tu nombre</label><input  id="myName" type="text">
+       <label>mensaje</label> <input  id="myMessage" type="text">
+       <input id="sendMensaje" type="submit"/>
+       <div id="chatArea">mensaje Output: <br/></div>
+   </div>
 
    <script>
 
       var videoArea = document.querySelector("video");
       var videoSelect = document.querySelector("#camera");
+
+      var myName = document.querySelector("#myName");
+      var myMessage = document.querySelector("#myMessage");
+      var sendMensaje = document.querySelector("#sendMensaje");
+      var chatArea = document.querySelector("#chatArea");
+      var ROOM = "chat";
+
+
       // metodo antiguo de listar las camaras.
       //MediaStreamTrack.getSources(getCameras);
 
@@ -30,6 +44,17 @@
       videoSelect.onchage = startStream;
 
       startStream();
+
+      io = io.connect();   // nos conectamos a sokect IO
+      io.emit('ready',ROOM); // emitimos la avitacion
+
+      io.on('announce', (data)=>{
+         displayMessage(data.message)
+      });
+
+      function displayMessage(mensaje){
+         chatArea.innerHTML = chatArea.innerHTML + "<br/>" + mensaje; 
+      }
 
       function getCameras(sourceInfos) {
          for (var i = 0; i !== sourceInfos.length; ++i) {
