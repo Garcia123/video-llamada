@@ -9,14 +9,15 @@
 </head>
 
 <body>
-
+   <!--
    <div>
       Video :
       <select id="camera"></select>
-   </div>
+   </div> -->
    <br/>
 
-   <video autoplay class="grayscale_filter"></video>
+   <video id="myVideoTag" autoplay class="grayscale_filter"></video>
+   <video id="theirVideoTag" autoplay class="grayscale_filter"></video>
    <div>
       <label>Tu nombre</label>
       <input id="myName" type="text">
@@ -26,31 +27,86 @@
       <div id="chatArea">mensaje Output:
          <br/>
       </div>
+
+      <div id="signalingArea">signalin mensaje:
+         <br/>
+      </div>
+
    </div>
 
    <script>
 
-      var videoArea = document.querySelector("video");
-      var videoSelect = document.querySelector("#camera");
+      var myVideoTag = document.querySelector("#myVideoTag");
+      var theirVideoTag = document.querySelector("#theirVideoTag");
 
+
+      //var videoSelect = document.querySelector("#camera");
       var myName = document.querySelector("#myName");
       var myMessage = document.querySelector("#myMessage");
       var sendMensaje = document.querySelector("#sendMensaje");
       var chatArea = document.querySelector("#chatArea");
+      var signalingArea = document.querySelector("#signalingArea");
+
       var ROOM = "chat";
+      var SIGNAL_ROOM = "signal_room";
 
-
-      // metodo antiguo de listar las camaras.
-      //MediaStreamTrack.getSources(getCameras);
-
-      navigator.mediaDevices.enumerateDevices().then(getCameras);
-
-      videoSelect.onchage = startStream;
-
-      //startStream();
+      var configuration = {
+         'iceServers': [{ "url": "stun:stun.l.google.com:19302" }]
+      }
+      var rtcPeerConn;
 
       io = io.connect();   // nos conectamos a sokect IO
-      io.emit('ready', ROOM); // emitimos la avitacion
+      io.emit('ready', { "chat_room": ROOM, "signal_room": SIGNAL_ROOM }); // emitimos la avitacion
+
+      // evimitmos para la signaling
+      io.emit('signal', { "type": "user_here", "message": "are you redy for a call?", "room": SIGNAL_ROOM });
+
+      io.on('signaling_mensaje', (data) => {
+         displaySegnalMessage("signal received  :" + data.type);
+
+         if (!rtcPeerConn)
+            startSignaling();
+
+      });
+
+      function startSignaling() {
+
+         displaySegnalMessage("starting signaling...");
+         rtcPeerConn = new webkitRTCPeerConnection(configuration);
+
+         rtcPeerConn.addEventListener('icecandidate', (event) => {
+            if (event.candidate) {
+               io.emit('signal', {
+                  "type": "ice_candidate",
+                  "message": JSON.stringify({ 'candidate': Event.candidate }),
+                  "room": SIGNAL_ROOM
+               });
+               displaySegnalMessage("complete that ice candidate...");
+            }
+         });
+
+         rtcPeerConn.addEventListener("negotiationneeded", (event) => {
+            displaySegnalMessage("on negotiation called");
+            rtcPeerConn.createOffer(sendLocalDesc, logError);
+
+         });
+      }
+
+      function sendLocalDesc(desc) {
+         rtcPeerConn.setLocalDescription(desc, () => {
+            displayMessage("sending local  descripcion");
+            io.emit("signal", {
+               "type": "sdp",
+               "message": JSON.stringify({ 'sdp': rtcPeerConn.localDescription }),
+               "room": SIGNAL_ROOM
+            });
+         }, logError);
+      }
+
+      function logError(error) {
+         displaySegnalMessage(error.name + " : " + error.mensaje);
+      }
+
 
       io.on('announce', (data) => {
          displayMessage(data.message);
@@ -69,38 +125,9 @@
          chatArea.innerHTML = chatArea.innerHTML + "<br/>" + mensaje;
       }
 
-      function getCameras(sourceInfos) {
-         for (var i = 0; i !== sourceInfos.length; ++i) {
-            var sourceInfo = sourceInfos[i];
-            var opcion = document.createElement('option');
-            opcion.value = sourceInfo.id;
-            if (sourceInfo.kind === 'videoinput') {
-               opcion.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
-               videoSelect.appendChild(opcion);
-            }
-         }
+      function displaySegnalMessage(mensaje) {
+         signalingArea.innerHTML = signalingArea.innerHTML + "<br/>" + mensaje;
       }
-
-      function startStream() {
-         navigator.getUserMedia = navigator.getUserMedia ||
-            navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-         var videoSource = videoSelect.value;
-         var contraints = {
-            audio: true,
-            video: true
-         };
-         navigator.getUserMedia(contraints, onSuccess, onError);
-      }
-
-      function onSuccess(stream) {
-         videoArea.src = window.URL.createObjectURL(stream);
-         videoArea.play();
-      }
-
-      function onError(error) {
-         console.error(error);
-      }
-
 
    </script>
 
