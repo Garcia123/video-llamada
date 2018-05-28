@@ -11,9 +11,15 @@ app.get("/", (req, res) => {
 
 app.io.route("ready", (req) => {
     req.io.join(req.data);
-    app.io.room(req.data).broadcast("announce",{
-        message : "new client in the " + req.data + "room."
+    app.io.room(req.data).broadcast("announce", {
+        message: "new client in the " + req.data + "room."
     })
-})
+});
 
+app.io.route("send", (req) => {
+    app.io.room(req.data.room).broadcast("message", {
+        message: req.data.message,
+        author: req.data.author
+    });
+});
 app.listen(PORT);
