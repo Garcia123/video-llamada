@@ -6,6 +6,8 @@
 		"connect": "^3.6.6",
 		"ejs": "2.x",
 		"express": "4.x",
-		"express.io": "^1.1.13"
+		"express.io": "^1.1.13",
+		"fs": "0.0.1-security",
+		"https": "^1.0.0"
 	}
 }

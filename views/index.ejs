@@ -2,158 +2,39 @@
 <html lang="es">
 
 <head>
-   <meta charset="UTF-8">
-   <title>introduccion a webRTC</title>
-   <link rel="stylesheet" type="text/css" href="styles.css">
-   <script src="/socket.io/socket.io.js"></script>
+    <meta charset="UTF-8">
+    <title>introduccion a webRTC</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
-   <!--
+    <!--
    <div>
       Video :
       <select id="camera"></select>
    </div> -->
-   <br/>
+    <br/>
 
-   <video id="myVideoTag" autoplay class="grayscale_filter"></video>
-   <video id="theirVideoTag" autoplay class="grayscale_filter"></video>
-   <div>
-      <label>Tu nombre</label>
-      <input id="myName" type="text">
-      <label>mensaje</label>
-      <input id="myMessage" type="text">
-      <input id="sendMensaje" type="submit" />
-      <div id="chatArea">mensaje Output:
-         <br/>
-      </div>
+    <video id="myVideoTag" autoplay class="grayscale_filter"></video>
+    <video id="theirVideoTag" autoplay class="grayscale_filter"></video>
+    <div>
+        <label>Tu nombre</label>
+        <input id="myName" type="text">
+        <label>mensaje</label>
+        <input id="myMessage" type="text">
+        <input id="sendMensaje" type="submit" />
+        <div id="chatArea">mensaje Output:
+            <br/>
+        </div>
 
-      <div id="signalingArea">signalin mensaje:
-         <br/>
-      </div>
+        <div id="signalingArea">signalin mensaje:
+            <br/>
+        </div>
 
-   </div>
+    </div>
 
-   <script>
-
-      var myVideoTag = document.querySelector("#myVideoTag");
-      var theirVideoTag = document.querySelector("#theirVideoTag");
-
-
-      //var videoSelect = document.querySelector("#camera");
-      var myName = document.querySelector("#myName");
-      var myMessage = document.querySelector("#myMessage");
-      var sendMensaje = document.querySelector("#sendMensaje");
-      var chatArea = document.querySelector("#chatArea");
-      var signalingArea = document.querySelector("#signalingArea");
-
-      var ROOM = "chat";
-      var SIGNAL_ROOM = "signal_room";
-
-      var configuration = {
-         'iceServers': [{ "url": "stun:stun.l.google.com:19302" }]
-      }
-      var rtcPeerConn;
-
-      io = io.connect();   // nos conectamos a sokect IO
-      io.emit('ready', { "chat_room": ROOM, "signal_room": SIGNAL_ROOM }); // emitimos la avitacion
-
-      // evimitmos para la signaling
-      io.emit('signal', { "type": "user_here", "message": "are you redy for a call?", "room": SIGNAL_ROOM });
-
-      io.on('signaling_mensaje', (data) => {
-         displaySegnalMessage("signal received  :" + data.type);
-
-         if (!rtcPeerConn)
-            startSignaling();
-         
-         if(data.type != "user_here"){
-            var message = JSON.parse(data.message);
-            if(mensaje.sdp){
-               rtcPeerConn.setRemoteDescription(new RTCSessionDescription(message.sdp),()=>{
-                  if(rtcPeerConn.remoteDescription.type == "offer"){
-                     rtcPeerConn.createAnswer(sendLocalDesc,logError);
-                  }
-               });  
-            }else{
-               
-            }
-         }
-
-      });
-
-      function startSignaling() {
-
-         displaySegnalMessage("starting signaling...");
-         rtcPeerConn = new webkitRTCPeerConnection(configuration);
-
-         rtcPeerConn.addEventListener('icecandidate', (event) => {
-            if (event.candidate) {
-               io.emit('signal', {
-                  "type": "ice_candidate",
-                  "message": JSON.stringify({ 'candidate': Event.candidate }),
-                  "room": SIGNAL_ROOM
-               });
-               displaySegnalMessage("complete that ice candidate...");
-            }
-         });
-
-         rtcPeerConn.addEventListener("negotiationneeded", (event) => {
-            displaySegnalMessage("on negotiation called");
-            rtcPeerConn.createOffer(sendLocalDesc, logError);
-         });
-
-         rtcPeerConn.addEventListener("addstream", (event) => {
-            displaySegnalMessage("going to add  their stream...");
-            theirVideoTag.src = URL.createObjectURL(event.stream);
-         });
-
-         navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-         navigator.getUserMedia({ "audio": true, "video": true }, (stream) => {
-            displaySegnalMessage("going to display my stream...");
-            myVideoTag.src = URL.createObjectURL(stream);
-         }, logError);
-
-      }
-
-      function sendLocalDesc(desc) {
-         rtcPeerConn.setLocalDescription(desc, () => {
-            displayMessage("sending local  descripcion");
-            io.emit("signal", {
-               "type": "sdp",
-               "message": JSON.stringify({ 'sdp': rtcPeerConn.localDescription }),
-               "room": SIGNAL_ROOM
-            });
-         }, logError);
-      }
-
-      function logError(error) {
-         displaySegnalMessage(error.name + " : " + error.mensaje);
-      }
-
-
-      io.on('announce', (data) => {
-         displayMessage(data.message);
-      });
-
-      io.on('message', (data) => {
-         displayMessage(data.author + " : " + data.message);
-      });
-
-      sendMensaje.addEventListener("click", (event) => {
-         io.emit("send", { "author": myName.value, "message": myMessage.value });
-         event.preventDefault();
-      }, false);
-
-      function displayMessage(mensaje) {
-         chatArea.innerHTML = chatArea.innerHTML + "<br/>" + mensaje;
-      }
-
-      function displaySegnalMessage(mensaje) {
-         signalingArea.innerHTML = signalingArea.innerHTML + "<br/>" + mensaje;
-      }
-
-   </script>
+    <script src="main.js"></script>
 
 </body>
 
