@@ -14,12 +14,12 @@ var ROOM = "chat";
 var SIGNAL_ROOM = "signal_room";
 
 var configuration = {
-   'iceServers': [{ "url": "stun:stun.l.google.com:19302" }]
+   'iceServers': [{ "url": "stun:stun.sipgate.net:3478" }]
 };
 var rtcPeerConn;
 
 io = io.connect();   // nos conectamos a sokect IO
-io.emit('ready', { "chat_room": ROOM, "signal_room": SIGNAL_ROOM }); // emitimos la avitacion
+io.emit('ready', { "chat_room": ROOM, "signal_room": SIGNAL_ROOM }); // emitimos las dos salas 
 
 // evimitmos para la signaling
 io.emit('signal', { "type": "user_here", "message": "¿estás listo para una llamada?", "room": SIGNAL_ROOM });
@@ -63,9 +63,8 @@ function startSignaling() {
    displaySegnalMessage("comenzando a señalar...");
    rtcPeerConn = new webkitRTCPeerConnection(configuration);
 
-
    rtcPeerConn.onicecandidate = function (event) {
-
+      debugger;
       console.log("rtcPeerConn ( onicecandidate )", event);
 
       if (event.candidate) {
